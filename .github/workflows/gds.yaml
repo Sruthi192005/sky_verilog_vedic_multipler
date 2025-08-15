@@ -53,7 +53,7 @@ jobs:
         env:
           GATES: "yes"
           PDK_TYPE: "sky130"
-          COCOTB_RESOLVE_X: "GSR"
+          COCOTB_RESOLVE_X: "ZEROS"
 
       - name: Create dummy results.xml (on failure)
         if: failure()
