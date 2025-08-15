@@ -5,11 +5,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  docs:
     runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -20,6 +17,3 @@ jobs:
         uses: TinyTapeout/tt-gds-action/docs@ttsky25a
         with:
           tools-ref: ttsky25a
-
-      - name: Deploy to GitHub Pages   # ✅ REQUIRED
-        uses: actions/deploy-pages@v4 # ✅ REQUIRED
