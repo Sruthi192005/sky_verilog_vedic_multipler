@@ -1,6 +1,3 @@
-# GitHub Actions workflow for building and testing a Tiny Tapeout design.
-# This workflow is designed to run on pushes to the repository and can also be triggered manually.
-
 name: gds
 
 on:
@@ -11,7 +8,7 @@ jobs:
   gds:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repo
+      - name: checkout repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -36,52 +33,23 @@ jobs:
     needs: gds
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repo
+      - name: checkout repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install cocotb
-        # Use a specific version of cocotb to ensure reproducibility.
-        # This can help avoid future errors if a new version introduces breaking changes.
-        run: pip install cocotb==1.7.2
-
-      - name: Run GL test
-        # Change the `COCOTB_RESOLVE_X` variable to a valid value like `1` or `0`.
-        # The previous error was caused by the invalid value "GSR".
-        # We also create the 'test' directory explicitly to avoid the "unable to open" VCD error.
-        run: |
-          mkdir -p test
-          make GATES=yes -C test
-        env:
-          GATES: "yes"
-          PDK_TYPE: "sky130"
-          COCOTB_RESOLVE_X: 1 # Set to a valid integer value.
-
-      - name: Create dummy results.xml (on failure)
-        # Add a conditional step to ensure results.xml is created even if the test fails.
-        # This is crucial for the "Upload test summary" action to work correctly.
-        if: failure()
-        run: |
-          mkdir -p test
-          echo "<testsuite></testsuite>" > test/results.xml
-          
-      - name: Upload test summary
-        # This action requires a results.xml file to exist.
-        uses: test-summary/action@v2.3
+      - name: GL test
+        uses: TinyTapeout/tt-gds-action/gl_test@ttsky25a
         with:
-          paths: test/results.xml
+          pdk: sky130
 
   viewer:
-    needs: gl_test # Changed dependency to gl_test to ensure viewer runs after tests complete
+    needs: gds
     runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
     permissions:
-      pages: write     # to deploy to Pages
-      id-token: write  # to verify the deployment originates from an appropriate source
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
     steps:
-      - name: Run Viewer
-        uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
+      - uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
         with:
           pdk: sky130
