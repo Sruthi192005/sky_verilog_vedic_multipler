@@ -38,20 +38,21 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Create test directory
-        run: mkdir -p test
+      - name: Install cocotb
+        run: pip install cocotb
 
-      - name: GL test
-        uses: TinyTapeout/tt-gds-action/gl_test@ttsky25a
-        with:
-          pdk: sky130
+      - name: Run GL test
+        run: make GATES=yes
         env:
           GATES: "yes"
           PDK_TYPE: "sky130"
-          COCOTB_RESOLVE_X: "0" 
+          COCOTB_RESOLVE_X: "ZERO"
 
-      - name: Create dummy results.xml
-        run: echo "<testsuite></testsuite>" > test/results.xml
+      - name: Create dummy results.xml (on failure)
+        if: failure()
+        run: |
+          mkdir -p test
+          echo "<testsuite></testsuite>" > test/results.xml
 
       - name: Upload test summary
         uses: test-summary/action@v2.3
