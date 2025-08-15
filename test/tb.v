@@ -48,6 +48,6 @@ module tb;
         ui_in = {4'd9, 4'd0};
         repeat (2) @(posedge clk);
 
-        $finish;
+        $stop;
     end
 endmodule
