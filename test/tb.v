@@ -1,58 +1,53 @@
-`timescale 1ns / 1ps
+`timescale 1ns/1ps
+module tb_vedic_4x4;
 
-module tb;
-   initial begin
-    $dumpfile("tb.vcd");
-    $dumpvars(0, tb);
-    #1;
-  end
+    reg  [7:0] ui_in;
+    wire [7:0] uo_out;
+    reg  [7:0] uio_in;
+    wire [7:0] uio_out;
+    wire [7:0] uio_oe;
+    reg clk, rst_n, ena;
 
-  reg        clk;
-  reg        rst_n;
-  reg        ena;
-  reg [7:0]  ui_in;
-  wire [7:0] uo_out;
+    tt_um_vedic_4x4 dut (
+        .ui_in(ui_in),
+        .uo_out(uo_out),
+        .uio_in(uio_in),
+        .uio_out(uio_out),
+        .uio_oe(uio_oe),
+        .clk(clk),
+        .rst_n(rst_n),
+        .ena(ena)
+    );
 
-  reg  [7:0] uio_in = 8'b0;
-  wire [7:0] uio_out;
-  wire [7:0] uio_oe;
+    initial clk = 0;
+    always #5 clk = ~clk; // 10ns period
 
-  tt_um_vedic_4x4 dut (
-    .clk(clk),
-    .rst_n(rst_n),
-    .ena(ena),
-    .ui_in(ui_in),
-    .uo_out(uo_out),
-    .uio_in(uio_in),
-    .uio_out(uio_out),
-    .uio_oe(uio_oe)
-  );
+    initial begin
+        ena   = 1;
+        rst_n = 0;
+        uio_in = 8'b0;
+        ui_in = 8'b0;
 
-  always #5 clk = ~clk;
+        repeat (5) @(posedge clk);
+        rst_n = 1;
 
-  initial begin
-   
+        // Test 1: 3 * 2 = 6
+        ui_in = {4'd3, 4'd2};
+        repeat (2) @(posedge clk);
+        $display("Result: %d", uo_out);
 
-    clk = 0;
-    ena = 1;
-    rst_n = 0;
-    ui_in = 8'b0;
+        // Test 2: 5 * 4 = 20
+        ui_in = {4'd5, 4'd4};
+        repeat (2) @(posedge clk);
 
-    #20 rst_n = 1;
+        // Test 3: 15 * 15 = 225
+        ui_in = {4'd15, 4'd15};
+        repeat (2) @(posedge clk);
 
-    ui_in = {4'd3, 4'd2};
-    #20;
+        // Test 4: 9 * 0 = 0
+        ui_in = {4'd9, 4'd0};
+        repeat (2) @(posedge clk);
 
-    ui_in = {4'd5, 4'd4};
-    #20;
-
-    ui_in = {4'd15, 4'd15};
-    #20;
-
-    ui_in = {4'd9, 4'd0};
-    #20;
-
-   
-  end
-
+        $finish;
+    end
 endmodule
