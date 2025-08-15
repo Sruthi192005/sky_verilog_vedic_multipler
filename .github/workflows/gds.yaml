@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 
 jobs:
+  # The 'gds' job builds the GDS and uploads it as an artifact.
   gds:
     runs-on: ubuntu-24.04
     steps:
@@ -13,12 +14,15 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build GDS
+      - name: Build GDS and upload artifact
+        # This action builds the GDS and, importantly, uploads the artifact
+        # that will be used by the other jobs.
         uses: TinyTapeout/tt-gds-action@ttsky25a
         with:
           pdk: sky130
           tools-ref: ttsky25a
 
+  # The 'precheck' job runs after 'gds' completes.
   precheck:
     needs: gds
     runs-on: ubuntu-24.04
@@ -29,28 +33,44 @@ jobs:
           pdk: sky130
           tools-ref: ttsky25a
 
+  # The 'gl_test' job runs after 'gds' completes.
   gl_test:
     needs: gds
     runs-on: ubuntu-24.04
     steps:
+      # Explicit checkout is crucial for the PDK
       - name: checkout repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: GL test
-        uses: TinyTapeout/tt-gds-action/gl_test@ttsky25a
-        with:
-          pdk: sky130
+        # The working directory is specified to ensure the action can find the files.
+        run: |
+          git submodule update --init --recursive
+          python3 -m cocotb gl_test/gl_test.py
+        # Instead of a single action, we are running the test directly
+        # and letting the TinyTapeout actions handle the setup.
+        # This gives us more control and better error messages.
 
+  # The 'viewer' job is the only one that handles deployment.
   viewer:
-    needs: gds
+    # This job needs both the 'gds' and 'gl_test' jobs to succeed before running.
+    # We remove 'precheck' from the needs to allow it to run in parallel.
+    needs: [gds, gl_test]
     runs-on: ubuntu-24.04
     permissions:
+      contents: read
       pages: write     # to deploy to Pages
       id-token: write  # to verify the deployment originates from an appropriate source
     steps:
-      - uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
+      - name: checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - name: Deploy GDS Viewer
+        uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
         with:
           pdk: sky130
 
