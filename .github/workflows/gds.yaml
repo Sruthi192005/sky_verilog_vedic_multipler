@@ -41,12 +41,13 @@ jobs:
       - name: Install cocotb
         run: pip install cocotb
 
-      - name: Run GL test
-        run: make GATES=yes
-        env:
-          GATES: "yes"
-          PDK_TYPE: "sky130"
-          # Removed COCOTB_RESOLVE_X to avoid invalid value error
+    - name: Run GL test
+  run: make GATES=yes -C test
+  env:
+    GATES: "yes"
+    PDK_TYPE: "sky130"
+    COCOTB_RESOLVE_X: "GSR"
+
 
       - name: Create dummy results.xml (on failure)
         if: failure()
