@@ -43,11 +43,10 @@ jobs:
 
       - name: Run GL test
         run: make GATES=yes
-        working-directory: test
         env:
           GATES: "yes"
           PDK_TYPE: "sky130"
-          COCOTB_RESOLVE_X: "GSR"
+          # Removed COCOTB_RESOLVE_X to avoid invalid value error
 
       - name: Create dummy results.xml (on failure)
         if: failure()
