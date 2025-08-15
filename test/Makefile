@@ -1,53 +1,54 @@
-# Makefile
-# See https://docs.cocotb.org/en/stable/quickstart.html for more info
+# Makefile for Cocotb testbench with Sky130 gate-level support
 
-# defaults
+# Choose the simulator and language
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
-SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v
 
-ifneq ($(GATES),yes)
+# Project structure
+SRC_DIR := $(PWD)/../src
+PROJECT_SOURCES := project.v
 
-# RTL simulation:
-SIM_BUILD = sim_build/rtl
-VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
-
+# Output directories
+ifeq ($(GATES),yes)
+	SIM_BUILD := sim_build/gl
 else
-
-# Gate level simulation:
-SIM_BUILD = sim_build/gl
-COMPILE_ARGS += -DGL_TEST
-COMPILE_ARGS += -DFUNCTIONAL
-COMPILE_ARGS += -DSIM
-
-# Select PDK based on env var: PDK_TYPE = ihp or sky130
-PDK_TYPE ?= sky130
-
-ifeq ($(PDK_TYPE),ihp)
-	VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_io/verilog/sg13g2_io.v
-	VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_stdcell/verilog/sg13g2_stdcell.v
-else ifeq ($(PDK_TYPE),sky130)
-	VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_io/verilog/sky130_fd_io.v
-	VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
-else
-	$(error Unknown PDK_TYPE: $(PDK_TYPE))
+	SIM_BUILD := sim_build/rtl
 endif
 
-# this gets copied in by the GDS action workflow
-VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
-
-endif
-
-# Allow sharing configuration between design and testbench via `include`:
+# Default compile arguments
 COMPILE_ARGS += -I$(SRC_DIR)
 
-# Include the testbench sources:
+# Source files (RTL or Gate-level)
+VERILOG_SOURCES :=
+
+ifeq ($(GATES),yes)
+
+	# Gate-level simulation
+	COMPILE_ARGS    += -DGL_TEST -DFUNCTIONAL -DSIM
+
+	# Include sky130 standard cell libraries
+	VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
+
+	
+	VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd__udp_primitives.v
+	VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
+
+	# Gate-level netlist
+	VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
+
+else
+
+	# RTL simulation
+	VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
+
+endif
+
+# Include testbench and top module
 VERILOG_SOURCES += $(PWD)/tb.v
-TOPLEVEL = tb
+TOPLEVEL := tb
 
-# MODULE is the basename of the Python test file
-MODULE = test
+# Python test module
+MODULE := test
 
-# include cocotb's make rules to take care of the simulator setup
+# Include cocotb rules
 include $(shell cocotb-config --makefiles)/Makefile.sim
