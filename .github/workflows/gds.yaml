@@ -48,7 +48,7 @@ jobs:
         env:
           GATES: "yes"
           PDK_TYPE: "sky130"
-          COCOTB_RESOLVE_X: "ZERO"   # ✅ FIXED: Avoid crash on unknown ('x') bits
+          COCOTB_RESOLVE_X: "ZERO" 
 
       - name: Create dummy results.xml
         run: echo "<testsuite></testsuite>" > test/results.xml
