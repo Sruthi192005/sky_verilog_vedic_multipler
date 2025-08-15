@@ -1,9 +1,9 @@
 name: gds
 
 on:
-  push:
-  pull_request:
-  workflow_dispatch:
+  push:           # run on push to any branch
+  pull_request:   # also run on PRs
+  workflow_dispatch: # allow manual trigger
 
 jobs:
   gds:
@@ -13,15 +13,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Install PDK
-        run: |
-          pip install volare
-          volare install --pdk sky130 --version latest
-          volare enable --pdk sky130 --version latest
-          volare list
-          mkdir -p dependencies
-          cp -r $(volare paths sky130 latest)/.. dependencies/
 
       - name: Build GDS
         uses: TinyTapeout/tt-gds-action@ttsky25a
@@ -53,14 +44,19 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install dependencies & PDK
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y iverilog
-          pip install cocotb volare
-          volare install --pdk sky130 --version latest
+          pip install cocotb
+
+      - name: Install PDK
+        run: |
+          pip install volare
           volare enable --pdk sky130 --version latest
           volare list
+          mkdir -p dependencies
+          cp -r $(volare paths sky130 latest)/.. dependencies/
 
       - name: Run GL test
         run: make GATES=yes -C test
