@@ -9,10 +9,6 @@ jobs:
         with:
           submodules: recursive
 
-      # Explicitly initialize submodules to ensure the PDK is available
-      - name: Initialize submodules
-        run: git submodule update --init --recursive
-
       - name: Install iverilog
         shell: bash
         run: sudo apt-get update && sudo apt-get install -y iverilog
