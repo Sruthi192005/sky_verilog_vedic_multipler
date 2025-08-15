@@ -8,6 +8,8 @@ TOPLEVEL_LANG ?= verilog
 SRC_DIR := $(PWD)/../src
 PROJECT_SOURCES := project.v
 
+PDK_ROOT ?= /home/runner/pdk
+
 # Output directories
 ifeq ($(GATES),yes)
 	SIM_BUILD := sim_build/gl
@@ -27,11 +29,8 @@ ifeq ($(GATES),yes)
 	COMPILE_ARGS    += -DGL_TEST -DFUNCTIONAL -DSIM
 
 	# Include sky130 standard cell libraries
-	VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
-
-	
-	VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd__udp_primitives.v
-	VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
+VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
+VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
 
 	# Gate-level netlist
 	VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
