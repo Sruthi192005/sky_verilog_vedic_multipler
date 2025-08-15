@@ -14,14 +14,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Debug PDK path before GDS
+      - name: Install PDK
         run: |
           pip install volare
           volare install --pdk sky130 --version latest
           volare enable --pdk sky130 --version latest
           volare list
-          echo "PDK PATH: $(volare paths sky130 latest)"
-          ls -R $(volare paths sky130 latest) || true
+          mkdir -p dependencies
+          cp -r $(volare paths sky130 latest)/.. dependencies/
 
       - name: Build GDS
         uses: TinyTapeout/tt-gds-action@ttsky25a
@@ -45,7 +45,7 @@ jobs:
           tools-ref: ttsky25a
 
   gl_test:
-    # Removed "needs: gds" so it won't be skipped if gds fails
+    needs: gds
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
