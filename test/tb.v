@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module tb_vedic_4x4;
+module tb;
 
     reg  [7:0] ui_in;
     wire [7:0] uo_out;
