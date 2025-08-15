@@ -49,9 +49,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y iverilog
-
-      - name: Install cocotb
-        run: pip install cocotb
+          pip install cocotb volare
+          volare enable --pdk sky130 --version latest
 
       - name: Run GL test
         run: make GATES=yes -C test
