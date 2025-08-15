@@ -2,6 +2,8 @@ name: gds
 
 on:
   push:
+    branches:
+      - main   # change if your branch is different
   workflow_dispatch:
 
 jobs:
@@ -23,6 +25,11 @@ jobs:
     needs: gds
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
       - name: Run Tiny Tapeout Precheck
         uses: TinyTapeout/tt-gds-action/precheck@ttsky25a
         with:
@@ -41,12 +48,12 @@ jobs:
       - name: Install cocotb
         run: pip install cocotb
 
-    - name: Run GL test
-      run: make GATES=yes -C test
-      env:
-        GATES: "yes"
-        PDK_TYPE: "sky130"
-        COCOTB_RESOLVE_X: "GSR"
+      - name: Run GL test
+        run: make GATES=yes -C test
+        env:
+          GATES: "yes"
+          PDK_TYPE: "sky130"
+          COCOTB_RESOLVE_X: "GSR"
 
       - name: Create dummy results.xml (on failure)
         if: failure()
@@ -65,9 +72,14 @@ jobs:
     environment:
       name: github-pages
     permissions:
-      pages: write     # to deploy to Pages
-      id-token: write  # to verify the deployment originates from an appropriate source
+      pages: write
+      id-token: write
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
       - name: Run Viewer
         uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
         with:
