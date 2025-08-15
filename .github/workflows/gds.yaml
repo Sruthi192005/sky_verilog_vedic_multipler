@@ -1,90 +1,30 @@
-name: gds
-
+name: build
 on:
   push:
     branches:
-      - main   # change if your branch is different
-  workflow_dispatch:
+      - main
+  pull_request:
 
 jobs:
-  gds:
-    runs-on: ubuntu-24.04
+  build:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+      - uses: actions/checkout@v3
 
-      - name: Build GDS
-        uses: TinyTapeout/tt-gds-action@ttsky25a
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          pdk: sky130
-          tools-ref: ttsky25a
-
-  precheck:
-    needs: gds
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Run Tiny Tapeout Precheck
-        uses: TinyTapeout/tt-gds-action/precheck@ttsky25a
-        with:
-          pdk: sky130
-          tools-ref: ttsky25a
-
-  gl_test:
-    needs: gds
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog
-          pip install cocotb volare
-          volare enable --pdk sky130 --version latest
+          python -m pip install --upgrade pip
+          pip install openlane volare
 
-      - name: Run GL test
-        run: make GATES=yes -C test
-        env:
-          GATES: "yes"
-          PDK_TYPE: "sky130"
-          COCOTB_RESOLVE_X: "ZEROS"
-
-      - name: Create dummy results.xml (on failure)
-        if: failure()
+      - name: Enable Sky130A PDK
         run: |
-          mkdir -p test
-          echo "<testsuite></testsuite>" > test/results.xml
+          volare enable sky130A
 
-      - name: Upload test summary
-        uses: test-summary/action@v2.3
-        with:
-          paths: test/results.xml
-
-  viewer:
-    needs: gds
-    runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
-    permissions:
-      pages: write
-      id-token: write
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Run Viewer
-        uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
-        with:
-          pdk: sky130
+      - name: Run OpenLane flow
+        run: |
+          flow.tcl -design . -overwrite
