@@ -18,11 +18,11 @@ module tb;
         .rst_n(rst_n),
         .ena(ena)
     );
-     initial begin
-    $dumpfile("tb.vcd");
-    $dumpvars(0, tb);
-    #1;
-  end
+    initial begin
+  $dumpfile("test/tb.vcd");
+  $dumpvars(0, tb);
+end
+
 
     initial clk = 0;
     always #5 clk = ~clk; // 10ns period
