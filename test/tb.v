@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+
 module tb;
 
     reg  [7:0] ui_in;
@@ -19,43 +20,39 @@ module tb;
         .ena(ena)
     );
 
+    // Clock generation
     initial clk = 0;
-    always #5 clk = ~clk; // 10ns period
+    always #5 clk = ~clk;
 
+    // Test sequence
     initial begin
-        // Initialize inputs
-        ena    = 1;
-        rst_n  = 0;
-        uio_in = 8'b0;
-        ui_in  = 8'b0;
+        // Initialize
+        rst_n = 0;
+        ena = 0;
+        ui_in = 0;
+        uio_in = 0;
 
-        // Hold reset low for 5 clock cycles
-        repeat (5) @(posedge clk);
+        // Apply reset
+        #20;
         rst_n = 1;
+        ena = 1;
 
-        // Wait additional 5 clock cycles after releasing reset to stabilize DUT
-        repeat (5) @(posedge clk);
-
-        // Test 1: 3 * 2 = 6
+        // Apply test: 3 * 2 = 6
         ui_in = {4'd3, 4'd2};
-        repeat (5) @(posedge clk);
-        $display("Test 1 Result: %d", uo_out);
+        #20;
+        $display("3 * 2 = %d", uo_out);  // should be 6
 
-        // Test 2: 5 * 4 = 20
-        ui_in = {4'd5, 4'd4};
-        repeat (5) @(posedge clk);
-        $display("Test 2 Result: %d", uo_out);
+        // Apply test: 4 * 5 = 20
+        ui_in = {4'd4, 4'd5};
+        #20;
+        $display("4 * 5 = %d", uo_out);  // should be 20
 
-        // Test 3: 15 * 15 = 225
+        // Apply test: 15 * 15 = 225
         ui_in = {4'd15, 4'd15};
-        repeat (5) @(posedge clk);
-        $display("Test 3 Result: %d", uo_out);
+        #20;
+        $display("15 * 15 = %d", uo_out);  // should be 225
 
-        // Test 4: 9 * 0 = 0
-        ui_in = {4'd9, 4'd0};
-        repeat (5) @(posedge clk);
-        $display("Test 4 Result: %d", uo_out);
-
-        $stop;
+        // Done
+        $finish;
     end
 endmodule
