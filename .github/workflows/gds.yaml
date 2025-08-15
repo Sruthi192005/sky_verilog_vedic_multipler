@@ -8,7 +8,7 @@ jobs:
   gds:
     runs-on: ubuntu-24.04
     steps:
-      - name: checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -29,37 +29,33 @@ jobs:
           pdk: sky130
           tools-ref: ttsky25a
 
- gl_test:
-  needs: gds
-  runs-on: ubuntu-24.04
-  steps:
-    - name: checkout repo
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
+  gl_test:
+    needs: gds
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Create test directory
-      run: mkdir -p test
+      - name: Create test directory
+        run: mkdir -p test
 
-    - name: GL test
-      uses: TinyTapeout/tt-gds-action/gl_test@ttsky25a
-      with:
-        pdk: sky130
-      env:
-        GATES: "yes"
-        PDK_TYPE: "sky130"
-        COCOTB_RESOLVE_X: "random"
+      - name: GL test
+        uses: TinyTapeout/tt-gds-action/gl_test@ttsky25a
+        with:
+          pdk: sky130
+        env:
+          GATES: "yes"
+          PDK_TYPE: "sky130"
 
-    - name: Create dummy results.xml
-      run: |
-        mkdir -p test
-        echo "<testsuite></testsuite>" > test/results.xml
+      - name: Create dummy results.xml
+        run: echo "<testsuite></testsuite>" > test/results.xml
 
-    - name: Upload test summary
-      uses: test-summary/action@v2.3
-      with:
-        paths: test/results.xml
-
+      - name: Upload test summary
+        uses: test-summary/action@v2.3
+        with:
+          paths: test/results.xml
 
   viewer:
     needs: gds
@@ -70,6 +66,7 @@ jobs:
       pages: write     # to deploy to Pages
       id-token: write  # to verify the deployment originates from an appropriate source
     steps:
-      - uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
+      - name: Run Viewer
+        uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
         with:
           pdk: sky130
