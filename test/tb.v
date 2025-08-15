@@ -20,11 +20,10 @@ module tb;
         .ena(ena)
     );
 
-    // Clock generation
+    // Clock generation: 10ns period
     initial clk = 0;
     always #5 clk = ~clk;
 
-    // Test sequence
     initial begin
         // Initialize
         rst_n = 0;
@@ -37,22 +36,28 @@ module tb;
         rst_n = 1;
         ena = 1;
 
-        // Apply test: 3 * 2 = 6
+        // Test case 1: 3 * 2 = 6
         ui_in = {4'd3, 4'd2};
         #20;
-        $display("3 * 2 = %d", uo_out);  // should be 6
+        $display("3 * 2 = %d (Expected 6)", uo_out);
 
-        // Apply test: 4 * 5 = 20
-        ui_in = {4'd4, 4'd5};
+        // Test case 2: 5 * 4 = 20
+        ui_in = {4'd5, 4'd4};
         #20;
-        $display("4 * 5 = %d", uo_out);  // should be 20
+        $display("5 * 4 = %d (Expected 20)", uo_out);
 
-        // Apply test: 15 * 15 = 225
+        // Test case 3: 15 * 15 = 225
         ui_in = {4'd15, 4'd15};
         #20;
-        $display("15 * 15 = %d", uo_out);  // should be 225
+        $display("15 * 15 = %d (Expected 225)", uo_out);
 
-        // Done
+        // Test case 4: 9 * 0 = 0
+        ui_in = {4'd9, 4'd0};
+        #20;
+        $display("9 * 0 = %d (Expected 0)", uo_out);
+
+        // Finish simulation
+        #20;
         $finish;
     end
 endmodule
