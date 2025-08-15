@@ -1,6 +1,6 @@
 module tt_um_vedic_4x4 (
     input  [7:0] ui_in,    // ui_in[7:4] = a, ui_in[3:0] = b
-    output [7:0] uo_out,   // r = a × b
+    output reg [7:0] uo_out,   // r = a × b
     input  [7:0] uio_in,   // unused
     output [7:0] uio_out,  // unused
     output [7:0] uio_oe,   // unused
@@ -22,7 +22,13 @@ module tt_um_vedic_4x4 (
         .r(r)
     );
 
-    assign uo_out = r;
+    // Output register to avoid 'x' and glitches
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            uo_out <= 8'b0;
+        else if (ena)
+            uo_out <= r;
+    end
 
 endmodule
 
