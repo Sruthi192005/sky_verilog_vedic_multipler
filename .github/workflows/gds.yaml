@@ -49,13 +49,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y iverilog
           pip install cocotb volare
-          volare enable sky130 latest  
+          volare enable --pdk sky130A
 
       - name: Run GL test
         run: make GATES=yes -C test
         env:
           GATES: "yes"
-          PDK_TYPE: "sky130"
+          PDK_TYPE: "sky130A"
           COCOTB_RESOLVE_X: "ZEROS"
 
       - name: Create dummy results.xml (on failure)
