@@ -5,8 +5,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  docs:
+  deploy:  # 🔁 changed from 'docs' to 'deploy'
     runs-on: ubuntu-24.04
+    environment:  # ✅ required for GitHub Pages
+      name: github-pages
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
