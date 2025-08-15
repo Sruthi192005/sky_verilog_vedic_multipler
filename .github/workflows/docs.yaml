@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:  # 🔁 changed from 'docs' to 'deploy'
+  deploy:
     runs-on: ubuntu-24.04
-    environment:  # ✅ required for GitHub Pages
+    environment:
       name: github-pages
 
     steps:
@@ -20,3 +20,6 @@ jobs:
         uses: TinyTapeout/tt-gds-action/docs@ttsky25a
         with:
           tools-ref: ttsky25a
+
+      - name: Deploy to GitHub Pages   # ✅ REQUIRED
+        uses: actions/deploy-pages@v4 # ✅ REQUIRED
