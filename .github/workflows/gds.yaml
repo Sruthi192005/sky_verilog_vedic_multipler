@@ -42,6 +42,9 @@ jobs:
         uses: TinyTapeout/tt-gds-action/gl_test@ttsky25a
         with:
           pdk: sky130
+        env:
+          GATES: "yes"
+          PDK_TYPE: "sky130"
 
   viewer:
     needs: gds
