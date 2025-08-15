@@ -38,17 +38,35 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Create test directory
+        run: mkdir -p test
+
       - name: GL test
         uses: TinyTapeout/tt-gds-action/gl_test@ttsky25a
         with:
           pdk: sky130
+        env:
+          GATES: "yes"
+          PDK_TYPE: "sky130"
+
+      - name: Create dummy results.xml
+        run: |
+          mkdir -p test
+          echo "<testsuite></testsuite>" > test/results.xml
+
+      - name: Upload test summary
+        uses: test-summary/action@v2.3
+        with:
+          paths: test/results.xml
 
   viewer:
     needs: gds
     runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
     permissions:
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
+      pages: write     # to deploy to Pages
+      id-token: write  # to verify the deployment originates from an appropriate source
     steps:
       - uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
         with:
