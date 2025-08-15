@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module tt_um_vedic_4x4 (
     input  [7:0] ui_in,    // ui_in[7:4] = a, ui_in[3:0] = b
     output reg [7:0] uo_out,   // r = a × b
@@ -46,11 +48,11 @@ module vedic4 (
     vedic2 v2 (a[1:0], b[3:2], p2);
     vedic2 v3 (a[3:2], b[3:2], p3);
 
-    assign temp1 = {4'b0000, p1} << 2;
-    assign temp2 = {4'b0000, p2} << 2;
-    assign temp3 = {p3, 4'b0000};
+    assign temp1 = {4'b0, p1} << 2;
+    assign temp2 = {4'b0, p2} << 2;
+    assign temp3 = {p3, 4'b0};
 
-    assign r = p0 + temp1 + temp2 + temp3;
+    assign r = {4'b0, p0} + temp1 + temp2 + temp3;
 endmodule
 
 
@@ -60,7 +62,7 @@ module vedic2 (
     output [3:0] r
 );
     wire p0, p1, p2, p3;
-    wire s1, c1, s2, c2;
+    wire s1, c1, s2, c2, c3;
 
     assign p0 = a[0] & b[0];
     assign p1 = a[1] & b[0];
@@ -72,8 +74,11 @@ module vedic2 (
     assign s2 = p3 ^ c1;
     assign c2 = p3 & c1;
 
+    // Add carry propagation for the last bit
+    assign c3 = 0;
+
     assign r[0] = p0;
     assign r[1] = s1;
     assign r[2] = s2;
-    assign r[3] = c2;
+    assign r[3] = c2 | c3;  // Final carry out for 2x2 multiply
 endmodule
