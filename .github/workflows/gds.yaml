@@ -38,6 +38,8 @@ jobs:
         with:
           submodules: recursive
 
+    - name: Create test directory        # <-- Add this step
+      run: mkdir -p test
       - name: GL test
         uses: TinyTapeout/tt-gds-action/gl_test@ttsky25a
         with:
