@@ -18,10 +18,7 @@ module tb;
         .rst_n(rst_n),
         .ena(ena)
     );
-   initial begin
-  $dumpfile("test/tb.vcd");
-  $dumpvars(0, tb); 
-end
+  
 
 
     initial clk = 0;
