@@ -43,6 +43,7 @@ jobs:
 
       - name: Run GL test
         run: make GATES=yes
+        working-directory: test
         env:
           GATES: "yes"
           PDK_TYPE: "sky130"
