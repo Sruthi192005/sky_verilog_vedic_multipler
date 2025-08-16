@@ -53,11 +53,11 @@ jobs:
       - name: Install PDK
         run: |
           pip install volare
-          # Debug: show available remote versions
+          # Show available versions in logs
           volare ls-remote --pdk sky130
-          # Enable a specific stable commit of the PDK
+          # Enable specific stable version
           volare enable --pdk sky130 fa87f8f4bbcc7255b6f0c0fb506960f531ae2392
-          volare list
+          volare ls
           mkdir -p dependencies
           cp -r "$(volare paths sky130 fa87f8f4bbcc7255b6f0c0fb506960f531ae2392)/.." dependencies/
 
