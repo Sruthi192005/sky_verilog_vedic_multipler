@@ -11,17 +11,19 @@ PROJECT_SOURCES = project.v
 PDK_ROOT ?= $(HOME)/.volare/sky130/fa87f8f4bbcc7255b6f0c0fb506960f531ae2392
 PDK_PATH = $(PDK_ROOT)
 
+# Debug info
 $(info Using PDK_ROOT: $(PDK_ROOT))
 
+# RTL vs Gate-Level simulation
 ifneq ($(GATES),yes)
 
-# RTL simulation
+# === RTL simulation ===
 SIM_BUILD = sim_build/rtl
 VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
 
 else
 
-# Gate-level simulation
+# === Gate-level simulation ===
 SIM_BUILD = sim_build/gl
 COMPILE_ARGS += -DGL_TEST
 COMPILE_ARGS += -DFUNCTIONAL
@@ -29,6 +31,7 @@ COMPILE_ARGS += -DUSE_POWER_PINS
 COMPILE_ARGS += -DSIM
 COMPILE_ARGS += -DUNIT_DELAY=\#1
 
+# Find verilog path inside PDK
 PDK_VERILOG_PATH = $(shell \
 	if [ -f "$(PDK_PATH)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v" ]; then \
 		echo "$(PDK_PATH)/sky130A/libs.ref/sky130_fd_sc_hd/verilog"; \
@@ -40,6 +43,7 @@ PDK_VERILOG_PATH = $(shell \
 		echo ""; \
 	fi)
 
+# Find required library files
 PRIMITIVES_V = $(shell \
 	if [ -f "$(PDK_VERILOG_PATH)/primitives.v" ]; then \
 		echo "$(PDK_VERILOG_PATH)/primitives.v"; \
@@ -54,6 +58,7 @@ SKY130_V = $(shell \
 		find $(PDK_PATH) -name "sky130_fd_sc_hd.v" 2>/dev/null | head -1; \
 	fi)
 
+# Add to sources
 ifneq ($(PRIMITIVES_V),)
 VERILOG_SOURCES += $(PRIMITIVES_V)
 $(info Found primitives.v at: $(PRIMITIVES_V))
@@ -68,10 +73,12 @@ else
 $(warning Could not find sky130_fd_sc_hd.v in PDK)
 endif
 
-# Gate-level netlist (adjust as per your actual netlist location)
+# Detect gate-level netlist
 GATE_LEVEL_NETLIST = $(shell \
 	if [ -f "$(PWD)/gate_level_netlist.v" ]; then \
 		echo "$(PWD)/gate_level_netlist.v"; \
+	elif [ -f "$(PWD)/../runs/wokwi/results/final/verilog/gl/user_project_wrapper.v" ]; then \
+		echo "$(PWD)/../runs/wokwi/results/final/verilog/gl/user_project_wrapper.v"; \
 	elif [ -f "$(PWD)/../user_project_wrapper.v" ]; then \
 		echo "$(PWD)/../user_project_wrapper.v"; \
 	else \
@@ -82,16 +89,17 @@ ifneq ($(GATE_LEVEL_NETLIST),)
 VERILOG_SOURCES += $(GATE_LEVEL_NETLIST)
 $(info Found gate-level netlist at: $(GATE_LEVEL_NETLIST))
 else
-$(error Gate-level netlist not found. Please check the location)
+$(error Gate-level netlist not found. Expected at $(PWD)/gate_level_netlist.v or similar location)
 endif
 
 endif  # GATES
 
 # Shared compile args
 COMPILE_ARGS += -I$(SRC_DIR)
+COMPILE_ARGS += -I../decred_top/rtl/src    # Added this line to fix missing include error
 
-# Testbench verilog file is in test/ folder
-VERILOG_SOURCES += $(PWD)/tb.v
+# Verilog sources
+VERILOG_SOURCES += tb.v
 
 TOPLEVEL = tb
 MODULE = test
