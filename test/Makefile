@@ -36,7 +36,7 @@ ifeq ($(GATES),yes)
     $(warning Could not find sky130_fd_sc_hd.v in PDK)
   endif
 
-  # Gate-level netlist (adjust path if needed)
+  # Gate-level netlist (adjust this if your path changes)
   GATE_LEVEL_NETLIST = /home/runner/work/sky_verilog_vedic_multipler/sky_verilog_vedic_multipler/dependencies/sky130/sky130A/libs.tech/xschem/decred_hash_macro/user_project_wrapper.v
   VERILOG_SOURCES += $(GATE_LEVEL_NETLIST)
   COMPILE_ARGS += -I/home/runner/work/sky_verilog_vedic_multipler/sky_verilog_vedic_multipler/dependencies/decred_top/rtl/src
@@ -51,9 +51,9 @@ COMPILE_ARGS += -I$(SRC_DIR)
 # Testbench and simulation
 VERILOG_SOURCES += tb.v
 TOPLEVEL = tb
-MODULE = test  # Your test.py module name (without .py)
+MODULE = test  # This is your test.py module name (without .py)
 
-# Disable debug mode (fixes GDB issues)
+# Disable debug mode (fixes GDB issue)
 export COCOTB_SIM_DEBUG = 0
 
 # Targets
@@ -66,8 +66,8 @@ debug:
 	@echo "VERILOG_SOURCES: $(VERILOG_SOURCES)"
 	@echo "COMPILE_ARGS: $(COMPILE_ARGS)"
 
-.PHONY: clean
-clean:
+.PHONY: cleanall
+cleanall:
 	rm -rf $(SIM_BUILD)
 	rm -f results.xml *.vcd
 
