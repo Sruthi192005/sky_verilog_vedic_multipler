@@ -1,6 +1,8 @@
 name: gds
-on: [push, workflow_dispatch]
-
+on:
+  push:           # run on push to any branch
+  pull_request:   # also run on PRs
+  workflow_dispatch: # allow manual trigger
 jobs:
   gds:
     runs-on: ubuntu-24.04
@@ -14,7 +16,6 @@ jobs:
         with:
           pdk: sky130
           tools-ref: ttsky25a
-
   precheck:
     needs: gds
     runs-on: ubuntu-24.04
@@ -28,7 +29,6 @@ jobs:
         with:
           pdk: sky130
           tools-ref: ttsky25a
-
   gl_test:
     needs: gds
     runs-on: ubuntu-24.04
@@ -37,141 +37,37 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Download all available artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-        continue-on-error: true
-      - name: List available artifacts
-        run: |
-          echo "=== Available artifacts ==="
-          ls -la artifacts/ || echo "No artifacts directory"
-          find artifacts -type f -name "*.v" 2>/dev/null || echo "No .v files in artifacts"
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
       - name: Install dependencies
-        shell: bash
         run: |
-          sudo apt-get update && sudo apt-get install -y iverilog
+          sudo apt-get update
+          sudo apt-get install -y iverilog
           pip install cocotb
-      - name: Setup gate-level netlist
-        run: |
-          # Look for the gate-level netlist file in artifacts
-          echo "=== Looking for gate-level netlist files ==="
-          find . -name "*.v" | grep -E "(gl|netlist|gate)" | head -10
-          
-          # Try to find the gate-level netlist in artifacts
-          GL_NETLIST=""
-          if [ -d "artifacts" ]; then
-            GL_NETLIST=$(find artifacts -name "*.v" | grep -E "(gl|netlist|gate)" | head -1)
-          fi
-          
-          # If not found in artifacts, look in current directory (in case the action puts files directly)
-          if [ -z "$GL_NETLIST" ]; then
-            GL_NETLIST=$(find . -name "*.v" | grep -E "(gl|netlist|gate)" | head -1)
-          fi
-          
-          # Look for any .v file that might be the netlist
-          if [ -z "$GL_NETLIST" ]; then
-            GL_NETLIST=$(find . artifacts -name "*.v" 2>/dev/null | head -1)
-          fi
-          
-          echo "Found gate-level netlist: $GL_NETLIST"
-          
-          if [ -f "$GL_NETLIST" ]; then
-            cp "$GL_NETLIST" test/gate_level_netlist.v
-            echo "Copied gate-level netlist to test/gate_level_netlist.v"
-            echo "File size: $(wc -l < "$GL_NETLIST") lines"
-          else
-            echo "ERROR: No gate-level netlist found!"
-            echo "Creating a minimal dummy netlist for debugging..."
-            cat > test/gate_level_netlist.v << 'EOF'
-// Minimal dummy module for debugging
-module user_project_wrapper (
-    input wire clk,
-    input wire rst_n,
-    output wire [7:0] out
-);
-    assign out = 8'h42;
-endmodule
-EOF
-            echo "Created dummy netlist at test/gate_level_netlist.v"
-          fi
-          
-          # Show what's in the netlist file
-          echo "=== Contents of gate_level_netlist.v (first 10 lines) ==="
-          head -10 test/gate_level_netlist.v
       - name: Install PDK
         run: |
           pip install volare
           # Enable the exact PDK version
           volare enable fa87f8f4bbcc7255b6f0c0fb506960f531ae2392
           # Get the actual PDK path using volare path command
-          VOLARE_PDK_PATH=$(volare path fa87f8f4bbcc7255b6f0c0fb506960f531ae2392)
-          echo "Volare PDK Path: $VOLARE_PDK_PATH"
-          
-          # Debug: Let's see what structure volare actually created
-          echo "=== Exploring volare PDK structure ==="
-          find $VOLARE_PDK_PATH -name "*.v" | head -10
-          ls -la $VOLARE_PDK_PATH/
-          
-          # Look for the verilog files we need
-          echo "=== Looking for sky130_fd_sc_hd verilog files ==="
-          find $VOLARE_PDK_PATH -path "*sky130_fd_sc_hd*" -name "*.v" | head -5
-          
-          # Create the expected PDK structure
-          mkdir -p dependencies/pdk/sky130A/libs.ref/sky130_fd_sc_hd/verilog
-          
-          # Find and copy the primitives.v file
-          PRIMITIVES_FILE=$(find $VOLARE_PDK_PATH -name "primitives.v" | head -1)
-          SKY130_FILE=$(find $VOLARE_PDK_PATH -name "sky130_fd_sc_hd.v" | head -1)
-          
-          echo "Found primitives.v at: $PRIMITIVES_FILE"
-          echo "Found sky130_fd_sc_hd.v at: $SKY130_FILE"
-          
-          if [ -f "$PRIMITIVES_FILE" ]; then
-            cp "$PRIMITIVES_FILE" dependencies/pdk/sky130A/libs.ref/sky130_fd_sc_hd/verilog/
-          fi
-          
-          if [ -f "$SKY130_FILE" ]; then
-            cp "$SKY130_FILE" dependencies/pdk/sky130A/libs.ref/sky130_fd_sc_hd/verilog/
-          fi
-          
-          # Set PDK_ROOT to point to our dependencies directory
-          PDK_ROOT_PATH=$(pwd)/dependencies/pdk
-          echo "PDK_ROOT=$PDK_ROOT_PATH" >> $GITHUB_ENV
-          echo "Final PDK_ROOT will be: $PDK_ROOT_PATH"
-          
-          # Verify the expected files exist
-          ls -la $PDK_ROOT_PATH/sky130A/libs.ref/sky130_fd_sc_hd/verilog/ || echo "Verilog files not found at expected location"
+          PDK_PATH=$(volare path fa87f8f4bbcc7255b6f0c0fb506960f531ae2392)
+          echo "PDK Path: $PDK_PATH"
+          mkdir -p dependencies
+          # Copy the PDK files using the correct path
+          cp -r $PDK_PATH dependencies/sky130
       - name: Run GL test
-        run: |
-          cd test
-          make clean
-          make GATES=yes
-          # Check for test failures
-          ! grep failure results.xml || echo "GL tests had failures"
+        run: make GATES=yes -C test
         env:
           GATES: "yes"
           PDK_TYPE: "sky130"
-          PDK_ROOT: ${{ env.PDK_ROOT }}
           COCOTB_RESOLVE_X: "ZEROS"
-      - name: Upload GL test results
+      - name: Create dummy results.xml (on failure)
+        if: failure()
+        run: |
+          mkdir -p test
+          echo "<testsuite></testsuite>" > test/results.xml
+      - name: Upload test summary
         uses: test-summary/action@v2.3
         with:
-          paths: "test/results.xml"
-        if: always()
-      - name: Upload GL test artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gl-test-results
-          path: |
-            test/tb.vcd
-            test/results.xml
-
+          paths: test/results.xml
   viewer:
     needs: gds
     runs-on: ubuntu-24.04
