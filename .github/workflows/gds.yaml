@@ -48,16 +48,27 @@ jobs:
           # Enable the exact PDK version
           volare enable fa87f8f4bbcc7255b6f0c0fb506960f531ae2392
           # Get the actual PDK path using volare path command
-          PDK_PATH=$(volare path fa87f8f4bbcc7255b6f0c0fb506960f531ae2392)
-          echo "PDK Path: $PDK_PATH"
-          mkdir -p dependencies
-          # Copy the PDK files using the correct path
-          cp -r $PDK_PATH dependencies/sky130
+          VOLARE_PDK_PATH=$(volare path fa87f8f4bbcc7255b6f0c0fb506960f531ae2392)
+          echo "Volare PDK Path: $VOLARE_PDK_PATH"
+          
+          # Create the expected PDK structure
+          mkdir -p dependencies/pdk
+          # Copy the PDK files to the expected location
+          cp -r $VOLARE_PDK_PATH dependencies/pdk/sky130A
+          
+          # Set PDK_ROOT to point to our dependencies directory
+          PDK_ROOT_PATH=$(pwd)/dependencies/pdk
+          echo "PDK_ROOT=$PDK_ROOT_PATH" >> $GITHUB_ENV
+          echo "Final PDK_ROOT will be: $PDK_ROOT_PATH"
+          
+          # Verify the expected files exist
+          ls -la $PDK_ROOT_PATH/sky130A/libs.ref/sky130_fd_sc_hd/verilog/ || echo "Verilog files not found at expected location"
       - name: Run GL test
         run: make GATES=yes -C test
         env:
           GATES: "yes"
           PDK_TYPE: "sky130"
+          PDK_ROOT: ${{ env.PDK_ROOT }}
           COCOTB_RESOLVE_X: "ZEROS"
       - name: Create dummy results.xml (on failure)
         if: failure()
