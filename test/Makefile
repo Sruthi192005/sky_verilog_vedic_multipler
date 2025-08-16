@@ -105,9 +105,12 @@ TOPLEVEL = tb
 # MODULE is the basename of the Python test file
 MODULE = test
 
-# Debug info
+# include cocotb's make rules to take care of the simulator setup
+include $(shell cocotb-config --makefiles)/Makefile.sim
+
+# Debug info - defined AFTER including cocotb makefiles to avoid conflicts
 .PHONY: debug
-debug:
+debug::
 	@echo "=== Makefile Debug Information ==="
 	@echo "GATES: $(GATES)"
 	@echo "PDK_ROOT: $(PDK_ROOT)"
@@ -119,12 +122,9 @@ debug:
 	@echo "VERILOG_SOURCES: $(VERILOG_SOURCES)"
 	@echo "SIM_BUILD: $(SIM_BUILD)"
 
-# Clean target
+# Custom clean target - extend cocotb's clean with double colon
 .PHONY: clean
-clean:
+clean::
 	rm -rf sim_build/
 	rm -f results.xml
 	rm -f *.vcd
-
-# include cocotb's make rules to take care of the simulator setup
-include $(shell cocotb-config --makefiles)/Makefile.sim
