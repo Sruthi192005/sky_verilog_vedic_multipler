@@ -94,10 +94,11 @@ endif
 
 endif  # GATES
 
-# Shared settings
+# Shared compile args
 COMPILE_ARGS += -I$(SRC_DIR)
+COMPILE_ARGS += -I../decred_top/rtl/src    # Added this line to fix missing include error
 
-# ✅ Fixed: use relative path for testbench
+# Verilog sources
 VERILOG_SOURCES += tb.v
 
 TOPLEVEL = tb
@@ -117,7 +118,7 @@ debug:
 	@echo "VERILOG_SOURCES: $(VERILOG_SOURCES)"
 	@echo "SIM_BUILD: $(SIM_BUILD)"
 
-# Clean target (uses :: to avoid conflict with cocotb)
+# Clean target
 .PHONY: clean
 clean::
 	rm -rf $(SIM_BUILD)
