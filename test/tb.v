@@ -19,6 +19,11 @@ module tb;
         .rst_n(rst_n),
         .ena(ena)
     );
+     initial begin
+    $dumpfile("tb.vcd");
+    $dumpvars(0, tb);
+    #1;
+  end
 
     // Clock generation: 10ns period
     initial clk = 0;
