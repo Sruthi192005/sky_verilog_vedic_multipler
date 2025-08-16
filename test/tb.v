@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module tb;
+module test;
 
     reg  [7:0] ui_in;
     wire [7:0] uo_out;
