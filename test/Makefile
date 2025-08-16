@@ -96,7 +96,10 @@ endif  # GATES
 
 # Shared settings
 COMPILE_ARGS += -I$(SRC_DIR)
-VERILOG_SOURCES += $(PWD)/tb.v
+
+# ✅ Fixed: use relative path for testbench
+VERILOG_SOURCES += tb.v
+
 TOPLEVEL = tb
 MODULE = test
 
@@ -114,7 +117,7 @@ debug:
 	@echo "VERILOG_SOURCES: $(VERILOG_SOURCES)"
 	@echo "SIM_BUILD: $(SIM_BUILD)"
 
-# Clean target (uses :: to avoid conflict with cocotb's Makefile)
+# Clean target (uses :: to avoid conflict with cocotb)
 .PHONY: clean
 clean::
 	rm -rf $(SIM_BUILD)
