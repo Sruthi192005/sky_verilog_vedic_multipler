@@ -1,7 +1,7 @@
 # Makefile
 # See https://docs.cocotb.org/en/stable/quickstart.html for more info
 
-# defaults
+# Defaults
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
@@ -11,15 +11,19 @@ PROJECT_SOURCES = project.v
 PDK_ROOT ?= $(HOME)/.volare/sky130/fa87f8f4bbcc7255b6f0c0fb506960f531ae2392
 PDK_PATH = $(PDK_ROOT)
 
+# Debug info
+$(info Using PDK_ROOT: $(PDK_ROOT))
+
+# RTL vs Gate-Level simulation
 ifneq ($(GATES),yes)
 
-# RTL simulation:
+# === RTL simulation ===
 SIM_BUILD = sim_build/rtl
 VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
 
 else
 
-# Gate level simulation:
+# === Gate-level simulation ===
 SIM_BUILD = sim_build/gl
 COMPILE_ARGS += -DGL_TEST
 COMPILE_ARGS += -DFUNCTIONAL
@@ -27,7 +31,7 @@ COMPILE_ARGS += -DUSE_POWER_PINS
 COMPILE_ARGS += -DSIM
 COMPILE_ARGS += -DUNIT_DELAY=\#1
 
-# Try multiple possible PDK locations and structures
+# Find verilog path inside PDK
 PDK_VERILOG_PATH = $(shell \
 	if [ -f "$(PDK_PATH)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v" ]; then \
 		echo "$(PDK_PATH)/sky130A/libs.ref/sky130_fd_sc_hd/verilog"; \
@@ -39,27 +43,22 @@ PDK_VERILOG_PATH = $(shell \
 		echo ""; \
 	fi)
 
-# Find primitives.v file
+# Find required library files
 PRIMITIVES_V = $(shell \
 	if [ -f "$(PDK_VERILOG_PATH)/primitives.v" ]; then \
 		echo "$(PDK_VERILOG_PATH)/primitives.v"; \
-	elif [ -f "$(PDK_PATH)/primitives.v" ]; then \
-		echo "$(PDK_PATH)/primitives.v"; \
 	else \
 		find $(PDK_PATH) -name "primitives.v" 2>/dev/null | head -1; \
 	fi)
 
-# Find sky130_fd_sc_hd.v file  
 SKY130_V = $(shell \
 	if [ -f "$(PDK_VERILOG_PATH)/sky130_fd_sc_hd.v" ]; then \
 		echo "$(PDK_VERILOG_PATH)/sky130_fd_sc_hd.v"; \
-	elif [ -f "$(PDK_PATH)/sky130_fd_sc_hd.v" ]; then \
-		echo "$(PDK_PATH)/sky130_fd_sc_hd.v"; \
 	else \
 		find $(PDK_PATH) -name "sky130_fd_sc_hd.v" 2>/dev/null | head -1; \
 	fi)
 
-# Add PDK files if found
+# Add to sources
 ifneq ($(PRIMITIVES_V),)
 VERILOG_SOURCES += $(PRIMITIVES_V)
 $(info Found primitives.v at: $(PRIMITIVES_V))
@@ -74,7 +73,7 @@ else
 $(warning Could not find sky130_fd_sc_hd.v in PDK)
 endif
 
-# Gate level netlist - try multiple locations
+# Detect gate-level netlist
 GATE_LEVEL_NETLIST = $(shell \
 	if [ -f "$(PWD)/gate_level_netlist.v" ]; then \
 		echo "$(PWD)/gate_level_netlist.v"; \
@@ -93,19 +92,15 @@ else
 $(error Gate-level netlist not found. Expected at $(PWD)/gate_level_netlist.v or similar location)
 endif
 
-endif
+endif  # GATES
 
-# Allow sharing configuration between design and testbench via `include`:
+# Shared settings
 COMPILE_ARGS += -I$(SRC_DIR)
-
-# Include the testbench sources:
 VERILOG_SOURCES += $(PWD)/tb.v
 TOPLEVEL = tb
-
-# MODULE is the basename of the Python test file
 MODULE = test
 
-# Debug info
+# Debug target
 .PHONY: debug
 debug:
 	@echo "=== Makefile Debug Information ==="
@@ -119,12 +114,12 @@ debug:
 	@echo "VERILOG_SOURCES: $(VERILOG_SOURCES)"
 	@echo "SIM_BUILD: $(SIM_BUILD)"
 
-# Clean target
+# Clean target (uses :: to avoid conflict with cocotb's Makefile)
 .PHONY: clean
-clean:
-	rm -rf sim_build/
+clean::
+	rm -rf $(SIM_BUILD)
 	rm -f results.xml
 	rm -f *.vcd
 
-# include cocotb's make rules to take care of the simulator setup
+# Include cocotb make rules
 include $(shell cocotb-config --makefiles)/Makefile.sim
