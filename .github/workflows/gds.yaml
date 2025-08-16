@@ -1,97 +1,51 @@
 name: gds
 
 on:
-  push:           # run on push to any branch
-  pull_request:   # also run on PRs
-  workflow_dispatch: # allow manual trigger
+  push:
+  workflow_dispatch:
 
 jobs:
   gds:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repo
+      - name: checkout repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: Build GDS
-        uses: TinyTapeout/tt-gds-action@ttsky25a
+        uses: TinyTapeout/tt-gds-action@ttihp25b
         with:
-          pdk: sky130
-          tools-ref: ttsky25a
+          pdk: ihp
 
   precheck:
     needs: gds
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
       - name: Run Tiny Tapeout Precheck
-        uses: TinyTapeout/tt-gds-action/precheck@ttsky25a
+        uses: TinyTapeout/tt-gds-action/precheck@ttihp25b
         with:
-          pdk: sky130
-          tools-ref: ttsky25a
+          pdk: ihp
 
   gl_test:
     needs: gds
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repo
+      - name: checkout repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog
-          pip install cocotb
-
-      - name: Install PDK
-        run: |
-          pip install volare
-          # Use correct syntax for volare >=0.20.x
-          volare enable fa87f8f4bbcc7255b6f0c0fb506960f531ae2392 --pdk sky130
-          volare list
-          mkdir -p dependencies
-          cp -r $(volare root)/sky130/fa87f8f4bbcc7255b6f0c0fb506960f531ae2392 dependencies/sky130
-
-      - name: Run GL test
-        run: make GATES=yes -C test
-        env:
-          GATES: "yes"
-          PDK_TYPE: "sky130"
-          COCOTB_RESOLVE_X: "ZEROS"
-
-      - name: Create dummy results.xml (on failure)
-        if: failure()
-        run: |
-          mkdir -p test
-          echo "<testsuite></testsuite>" > test/results.xml
-
-      - name: Upload test summary
-        uses: test-summary/action@v2.3
+      - name: GL test
+        uses: TinyTapeout/tt-gds-action/gl_test@ttihp25b
         with:
-          paths: test/results.xml
+          pdk: ihp
 
   viewer:
     needs: gds
     runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
     permissions:
-      pages: write
-      id-token: write
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Run Viewer
-        uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
-        with:
-          pdk: sky130
+      - uses: TinyTapeout/tt-gds-action/viewer@ttihp25b
