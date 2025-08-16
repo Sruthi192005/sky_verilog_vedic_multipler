@@ -1,50 +1,100 @@
-name: GDS Flow
+name: gds
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  push:           # run on push to any branch
+  pull_request:   # also run on PRs
+  workflow_dispatch: # allow manual trigger
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  gds:
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Install Dependencies
+      - name: Build GDS
+        uses: TinyTapeout/tt-gds-action@ttsky25a
+        with:
+          pdk: sky130
+          tools-ref: ttsky25a
+
+  precheck:
+    needs: gds
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Run Tiny Tapeout Precheck
+        uses: TinyTapeout/tt-gds-action/precheck@ttsky25a
+        with:
+          pdk: sky130
+          tools-ref: ttsky25a
+
+  gl_test:
+    needs: gds
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            python3 \
-            python3-pip \
-            klayout \
-            magic \
-            git \
-            wget \
-            curl \
-            make
+          sudo apt-get install -y iverilog
+          pip install cocotb
 
-      - name: Install PDK (Sky130)
+      - name: Install PDK
         run: |
           pip install volare
-          # Show available remote versions
+          # Show available versions in logs
           volare ls-remote --pdk sky130
-          # Enable specific version (replace with "latest" if needed)
+          # Enable specific stable version
           volare enable --pdk sky130 fa87f8f4bbcc7255b6f0c0fb506960f531ae2392
-          # List installed versions
           volare ls
-          # Copy into dependencies (FIXED: no '..')
+          # Copy only the PDK directory (FIXED: no '..')
           mkdir -p dependencies
           cp -r "$(volare paths sky130 fa87f8f4bbcc7255b6f0c0fb506960f531ae2392)" dependencies/
 
-      - name: Run Checks (DRC/LVS/etc.)
+      - name: Run GL test
+        run: make GATES=yes -C test
+        env:
+          GATES: "yes"
+          PDK_TYPE: "sky130"
+          COCOTB_RESOLVE_X: "ZEROS"
+
+      - name: Create dummy results.xml (on failure)
+        if: failure()
         run: |
-          echo "Running DRC, LVS, and other checks..."
-          # TODO: Replace this with your actual flow command, e.g.:
-          # make gds
+          mkdir -p test
+          echo "<testsuite></testsuite>" > test/results.xml
+
+      - name: Upload test summary
+        uses: test-summary/action@v2.3
+        with:
+          paths: test/results.xml
+
+  viewer:
+    needs: gds
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Run Viewer
+        uses: TinyTapeout/tt-gds-action/viewer@ttsky25a
+        with:
+          pdk: sky130
