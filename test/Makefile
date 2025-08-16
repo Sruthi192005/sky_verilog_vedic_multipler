@@ -58,7 +58,7 @@ export COCOTB_SIM_DEBUG = 0
 
 # Targets
 .PHONY: debug
-debug:
+debug::
 	@echo "=== Makefile Debug Information ==="
 	@echo "GATES: $(GATES)"
 	@echo "PDK_ROOT: $(PDK_ROOT)"
@@ -67,7 +67,7 @@ debug:
 	@echo "COMPILE_ARGS: $(COMPILE_ARGS)"
 
 .PHONY: clean
-clean:
+clean::
 	rm -rf $(SIM_BUILD)
 	rm -f results.xml *.vcd
 
