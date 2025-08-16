@@ -51,10 +51,32 @@ jobs:
           VOLARE_PDK_PATH=$(volare path fa87f8f4bbcc7255b6f0c0fb506960f531ae2392)
           echo "Volare PDK Path: $VOLARE_PDK_PATH"
           
+          # Debug: Let's see what structure volare actually created
+          echo "=== Exploring volare PDK structure ==="
+          find $VOLARE_PDK_PATH -name "*.v" | head -10
+          ls -la $VOLARE_PDK_PATH/
+          
+          # Look for the verilog files we need
+          echo "=== Looking for sky130_fd_sc_hd verilog files ==="
+          find $VOLARE_PDK_PATH -path "*sky130_fd_sc_hd*" -name "*.v" | head -5
+          
           # Create the expected PDK structure
-          mkdir -p dependencies/pdk
-          # Copy the PDK files to the expected location
-          cp -r $VOLARE_PDK_PATH dependencies/pdk/sky130A
+          mkdir -p dependencies/pdk/sky130A/libs.ref/sky130_fd_sc_hd/verilog
+          
+          # Find and copy the primitives.v file
+          PRIMITIVES_FILE=$(find $VOLARE_PDK_PATH -name "primitives.v" | head -1)
+          SKY130_FILE=$(find $VOLARE_PDK_PATH -name "sky130_fd_sc_hd.v" | head -1)
+          
+          echo "Found primitives.v at: $PRIMITIVES_FILE"
+          echo "Found sky130_fd_sc_hd.v at: $SKY130_FILE"
+          
+          if [ -f "$PRIMITIVES_FILE" ]; then
+            cp "$PRIMITIVES_FILE" dependencies/pdk/sky130A/libs.ref/sky130_fd_sc_hd/verilog/
+          fi
+          
+          if [ -f "$SKY130_FILE" ]; then
+            cp "$SKY130_FILE" dependencies/pdk/sky130A/libs.ref/sky130_fd_sc_hd/verilog/
+          fi
           
           # Set PDK_ROOT to point to our dependencies directory
           PDK_ROOT_PATH=$(pwd)/dependencies/pdk
