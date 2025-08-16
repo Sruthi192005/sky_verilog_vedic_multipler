@@ -3,6 +3,7 @@ on:
   push:           # run on push to any branch
   pull_request:   # also run on PRs
   workflow_dispatch: # allow manual trigger
+
 jobs:
   gds:
     runs-on: ubuntu-24.04
@@ -16,6 +17,7 @@ jobs:
         with:
           pdk: sky130
           tools-ref: ttsky25a
+
   precheck:
     needs: gds
     runs-on: ubuntu-24.04
@@ -29,14 +31,7 @@ jobs:
         with:
           pdk: sky130
           tools-ref: ttsky25a
-  gl_test:
-    needs: gds
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
   gl_test:
     needs: gds
     runs-on: ubuntu-24.04
@@ -165,6 +160,7 @@ EOF
         uses: test-summary/action@v2.3
         with:
           paths: test/results.xml
+
   viewer:
     needs: gds
     runs-on: ubuntu-24.04
