@@ -1,5 +1,6 @@
 name: test
 on: [push, workflow_dispatch]
+
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -9,12 +10,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install iverilog
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y iverilog
+          sudo apt-get install -y iverilog make
 
-      - name: Setup python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -25,7 +26,7 @@ jobs:
       - name: Run tests
         working-directory: test
         run: |
-          make clean
+          make cleanall
           make
           # Check if the test failed by searching the results.xml for failure
           if grep -q "<failure" results.xml; then
