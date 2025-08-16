@@ -45,11 +45,14 @@ jobs:
       - name: Install PDK
         run: |
           pip install volare
-          # Set PDK_ROOT and enable the exact PDK version
-          export PDK_ROOT=$HOME/.volare
+          # Enable the exact PDK version
           volare enable fa87f8f4bbcc7255b6f0c0fb506960f531ae2392
+          # Get the actual PDK path using volare path command
+          PDK_PATH=$(volare path fa87f8f4bbcc7255b6f0c0fb506960f531ae2392)
+          echo "PDK Path: $PDK_PATH"
           mkdir -p dependencies
-          cp -r $PDK_ROOT/sky130/fa87f8f4bbcc7255b6f0c0fb506960f531ae2392 dependencies/sky130
+          # Copy the PDK files using the correct path
+          cp -r $PDK_PATH dependencies/sky130
       - name: Run GL test
         run: make GATES=yes -C test
         env:
