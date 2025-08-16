@@ -1,9 +1,9 @@
 name: gds
 
 on:
-  push:
-  pull_request:
-  workflow_dispatch:
+  push:           # run on push to any branch
+  pull_request:   # also run on PRs
+  workflow_dispatch: # allow manual trigger
 
 jobs:
   gds:
@@ -53,11 +53,11 @@ jobs:
       - name: Install PDK
         run: |
           pip install volare
-          volare ls-remote --pdk sky130
-          volare enable --pdk sky130 --version fa87f8f4bbcc7255b6f0c0fb506960f531ae2392
-          volare ls
+          # Use correct syntax for volare >=0.20.x
+          volare enable fa87f8f4bbcc7255b6f0c0fb506960f531ae2392 --pdk sky130
+          volare list
           mkdir -p dependencies
-          cp -r "$(volare --pdk sky130 --version fa87f8f4bbcc7255b6f0c0fb506960f531ae2392 path)" dependencies/sky130
+          cp -r $(volare root)/sky130/fa87f8f4bbcc7255b6f0c0fb506960f531ae2392 dependencies/sky130
 
       - name: Run GL test
         run: make GATES=yes -C test
