@@ -53,7 +53,7 @@ jobs:
       - name: Install PDK
         run: |
           pip install volare
-          volare enable --pdk sky130 --version latest
+          volare enable --pdk sky130 latest
           volare list
           mkdir -p dependencies
           cp -r $(volare paths sky130 latest)/.. dependencies/
