@@ -96,7 +96,7 @@ endif  # GATES
 
 # Shared compile args
 COMPILE_ARGS += -I$(SRC_DIR)
-COMPILE_ARGS += -I../decred_top/rtl/src    # Added this line to fix missing include error
+COMPILE_ARGS += -I../decred_top/rtl/src    # Fix missing include error for decred_defines.v
 
 # Verilog sources
 VERILOG_SOURCES += tb.v
