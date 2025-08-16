@@ -36,7 +36,7 @@ ifeq ($(GATES),yes)
     $(warning Could not find sky130_fd_sc_hd.v in PDK)
   endif
 
-  # Gate-level netlist (adjust this if your path changes)
+  # Gate-level netlist (adjust if needed)
   GATE_LEVEL_NETLIST = /home/runner/work/sky_verilog_vedic_multipler/sky_verilog_vedic_multipler/dependencies/sky130/sky130A/libs.tech/xschem/decred_hash_macro/user_project_wrapper.v
   VERILOG_SOURCES += $(GATE_LEVEL_NETLIST)
   COMPILE_ARGS += -I/home/runner/work/sky_verilog_vedic_multipler/sky_verilog_vedic_multipler/dependencies/decred_top/rtl/src
@@ -51,23 +51,29 @@ COMPILE_ARGS += -I$(SRC_DIR)
 # Testbench and simulation
 VERILOG_SOURCES += tb.v
 TOPLEVEL = tb
-MODULE = test  # This is your test.py module name (without .py)
+MODULE = test  # your Python test module name without .py
 
 # Disable debug mode (fixes GDB issue)
 export COCOTB_SIM_DEBUG = 0
 
-# Targets
+# Default target: run simulation normally (no gdb)
+.PHONY: all run
+all: run
+
+run:
+	$(MAKE) SIM=$(SIM) SIM_BUILD=$(SIM_BUILD) TOPLEVEL=$(TOPLEVEL) MODULE=$(MODULE) \
+		$(shell cocotb-config --makefiles)/Makefile.sim run
+
+# Debug target: run simulation with gdb (requires gdb installed)
 .PHONY: debug
 debug:
-	@echo "=== Makefile Debug Information ==="
-	@echo "GATES: $(GATES)"
-	@echo "PDK_ROOT: $(PDK_ROOT)"
-	@echo "SIM_BUILD: $(SIM_BUILD)"
-	@echo "VERILOG_SOURCES: $(VERILOG_SOURCES)"
-	@echo "COMPILE_ARGS: $(COMPILE_ARGS)"
+	@echo "Running simulation in debug mode using gdb"
+	$(MAKE) SIM=$(SIM) SIM_BUILD=$(SIM_BUILD) TOPLEVEL=$(TOPLEVEL) MODULE=$(MODULE) \
+		$(shell cocotb-config --makefiles)/Makefile.sim debug
 
-.PHONY: cleanall
-cleanall:
+# Clean simulation build and results
+.PHONY: clean
+clean:
 	rm -rf $(SIM_BUILD)
 	rm -f results.xml *.vcd
 
